@@ -1,0 +1,67 @@
+% set font size to 11pt
+\documentclass[11pt]{article}
+
+% \usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+
+%nice serif font
+\usepackage{charter}
+
+%include images
+\usepackage{graphicx}
+%\graphicspath{ {./images/} }
+
+% Remove indentations at paragraph start
+\usepackage{parskip}
+
+% add boxes
+\usepackage{mdframed}
+
+\usepackage{blindtext}
+
+% harvard formatting citations
+\usepackage{natbib}
+% bibliography
+\bibliographystyle{IEEEtranN}
+
+% table resizing (consistent font size vs resizebox)
+\usepackage{tabularx}
+
+% remove numbering from sections
+%\setcounter{secnumdepth}{0}
+
+%adding unnumbered chapters to toc
+%\usepackage{hyperref}
+
+%float two images side by side https://tex.stackexchange.com/questions/392912/two-figures-side-by-side-in-tufte-latex
+% \usepackage{floatrow}
+
+
+%float two images side by side https://www.overleaf.com/learn/latex/How_to_Write_a_Thesis_in_LaTeX_(Part_3)%3A_Figures%2C_Subfigures_and_Tables
+\usepackage{caption}
+\usepackage{subcaption}
+
+% margins
+\usepackage{geometry}
+\geometry{
+ a4paper,
+ left=30mm,
+ right=25mm,
+ top=25mm,
+ bottom=25mm
+ }
+ 
+%tables
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage[table,xcdraw]{xcolor}
+\usepackage[normalem]{ulem}
+%highlighting
+\usepackage{soul,color}
+\usepackage{todonotes}
+
+\useunder{\uline}{\ul}{}
+\begin{document}
+\subsection{Data}
+
+\end{document}

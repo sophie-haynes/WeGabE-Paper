@@ -1,0 +1,540 @@
+% set font size to 11pt
+\documentclass[11pt]{article}
+
+% \usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+
+%nice serif font
+\usepackage{charter}
+
+%include images
+\usepackage{graphicx}
+%\graphicspath{ {./images/} }
+
+% Remove indentations at paragraph start
+\usepackage{parskip}
+
+% add boxes
+\usepackage{mdframed}
+
+\usepackage{blindtext}
+
+% add strikeout text
+\usepackage{cancel}
+
+% harvard formatting citations
+\usepackage{natbib}
+% bibliography
+\bibliographystyle{IEEEtranN}
+
+% table resizing (consistent font size vs resizebox)
+\usepackage{tabularx}
+
+% remove numbering from sections
+%\setcounter{secnumdepth}{0}
+
+%adding unnumbered chapters to toc
+%\usepackage{hyperref}
+
+%float two images side by side https://tex.stackexchange.com/questions/392912/two-figures-side-by-side-in-tufte-latex
+% \usepackage{floatrow}
+
+
+%float two images side by side https://www.overleaf.com/learn/latex/How_to_Write_a_Thesis_in_LaTeX_(Part_3)%3A_Figures%2C_Subfigures_and_Tables
+\usepackage{caption}
+\usepackage{subcaption}
+
+% margins
+\usepackage{geometry}
+\geometry{
+ a4paper,
+ left=30mm,
+ right=25mm,
+ top=25mm,
+ bottom=25mm
+ }
+ 
+%tables
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage[table,xcdraw]{xcolor}
+\usepackage[normalem]{ulem}
+%highlighting
+\usepackage{soul,color}
+\usepackage{todonotes}
+
+\useunder{\uline}{\ul}{}
+
+
+% \title{}
+% \begin{abstract}
+    
+% \end{abstract}
+\begin{document}
+\section{Introduction}
+The COVID-19 pandemic caused significant global disruption and heightened the need for expensive testing kits to help quickly diagnose, treat and prevent the spread of the disease. Such tests were not readily available in the early stages of the pandemic, which led to increased interest in alternative assistive methods of COVID-19 detection. Analysis of chest x-rays (CXRs) was proven to be a viable method of identifying COVID-19 cases, which provided a cheaper and more readily available alternative. However, it was also observed that it can be difficult to diagnose mild cases from CXRs alone \citep{Shi2021}, and even experienced radiologists were reported to achieve 64\% sensitivity when trying to identify COVID-19 from chest x-rays alone \citep{Castiglioni2020}.
+Consequently, in recent years there has been a surge of published research focused on developing deep learning models that can detect and localise COVID-19 from medical imagery. 
+\\Throughout the pandemic, access to labelled COVID-19 CXRs has been limited. Early publications frequently used datasets which contained between 100 and 300 COVID-19 images \citep{Khan2020, Apostolopoulos2020, Ozturk2020, Minaee2020}. This trend has continued in more recent work, with the use of training datasets with as few as 121 \citep{Ieracitano2022} and 207 \citep{Moura2022} COVID-19 samples. 
+\\Due to these data constraints, \textit{transfer learning} has been used extensively in the literature to improve model performance. By pre-training deep neural networks on a large labelled image dataset, such as ImageNet \citep{Deng2009}, it is commonly assumed that the network will converge faster since the model can already extract generic features from images. Furthermore, the exposure to images beyond the few training samples may produce more generalised features, thus potentially improving the cross-dataset performance of trained models.
+However, the relevance of these pre-learned features is unclear due to the significant domain shift from natural photographs to medical imagery. Upon review, we found that most COVID-19 classification studies did not perform comparisons of their pre-trained models against baseline models trained from scratch. As the availability of COVID-19 data has fluctuated rapidly throughout the pandemic, dataset usage in papers has been inconsistent. This has made it challenging to compare findings directly and draw definite conclusions on the benefit of different techniques, such as transfer learning, for COVID-19 classification and general medical imagery. 
+\\One of the most prevalent techniques used to learn from limited data is \textit{transfer learning}, where deep neural networks pre-trained on related image datasets. It has been shown to reduce the time a model takes to converge during training, and the literature suggests it can help models learn more effectively from limited data. Typically, it is used with large and complex architectures, such as VGG \citep{Simoyan2014}, ResNet \citep{He2016}, and DenseNet \citep{Huang2017}, as they have achieved state-of-the-art performance on standard image classification benchmark datasets. Due to their size, vast datasets would typically be required to learn meaningful features from such dense and complicated architectures. Medical data regulations and the cost of acquiring medical specialists to label the data has restricted the availability of public medical image datasets. Those that exist are generally magnitudes smaller than those typically used in mainstream image classification tasks, and are considered insufficient for effectively training such models from scratch. As such, in order to take advantage of the predictive power of state-of-the-art architectures, transfer learning is implemented in most COVID-19 classification publications. %when compared to simpler networks such as AlexNet} \citep{KrizhevskyAlex2012}.
+In addition to transfer learning, \textit{oversampling} and \textit{data augmentation} is frequently used generate more training samples and improve data distribution. It is widely assumed that these techniques help to prevent models from overfitting and encourages the training of a more robust model. Typical augmentations in COVID-19 publications included image rotation, flipping and zoom.
+\\Despite the considerable amount of published literature on COVID-19 detection, much of which report impressive performance metrics, early systematic reviews found much of the work unsatisfactory for proceeding to clinical trial due to concerns of data bias, model overfitting and overestimation of real-world predictive performance \citep{Wynants2020, Roberts2021}. Learning from limited medical imagery has proven to be challenging and the efficacy of established techniques derived from general image classification is unclear. Preliminary studies indicate they are not sufficient for the medical setting. This paper aims to explore the impact of frequently used data pre-processing techniques on COVID-19 CXR classification with limited data. When combined with a simple deep neural network architecture, we investigate whether they can achieve comparable performance to the more complex architectures reported in the literature. Furthermore, we evaluate the efficacy of such techniques on model generalisability.
+To this end, this paper contributes the following:
+\begin{itemize}
+    \item We produce a retrospective review of COVID-19 literature, which critically evaluates and highlights various methodological challenges which prevent the adoption of published models into the clinical setting.%\todo{Justify \ul{why}}
+    \item We perform an an ablation study of various data pre-processing techniques and report their impact on cross-dataset performance.
+    \item We present a deep learning methodology for the classification of COVID-19 chest x-rays, WeGabE. Models trained using this approach achieved the highest scores in our study, with test scores comparable to published literature. On internal test sets, the best performing WeGabE model achieved a sensitivity score of 98\% and specificity of 97.5\% , and outperformed a typical pre-trained network on external testset I.
+    \item We provide a thorough analysis of model performance, reporting area under curve (AUC), sensitivity, specificity, precision and plots of the prediction probability distributions. 
+    % \item We provide saliency maps to highlight areas of interest identified by the models. 
+\end{itemize}
+%  Furthermore, we present
+\\The rest of this paper is structured as follows: Section \ref{related} presents a review of well-cited and high-impact COVID-19 literature, Section \ref{method} details our experiment framework, in Section \ref{results} we present our findings and in Section \ref{discussion} we conclude our work.
+
+\section{Related Work}\label{related}
+A vast amount of literature on DL-based COVID-19 image analysis, classification and detection has been published in recent years. This section aims to review the most cited and influential COVID-19 research from the past two years, specifically focusing on papers published in journals with impact factors 4.5 and higher, or which have significant numbers of citations.
+
+
+\cite{Minaee2020} produced a COVID-19 chest x-ray dataset, that combines chest x-rays from the \cite{cohen2020covid} COVID-19 dataset and non-COVID images from CheXpert \cite{Irving2019}. The dataset comprises 2000 training and 3000 test images; however, there is a significant class imbalance. There are only 184 unique COVID-19 chest x-rays present in the dataset. The authors took 84 of these images and augmented them to produce 420 COVID images for the training set and the remaining 100 images for testing. 
+\cite{Abbas2021} proposed a novel architecture for the classification of COVID-19 chest x-rays. Their study combined an ImageNet pre-trained CNN with a class decomposition layer. The introduction of a class decomposition layer aimed to further improve model performance by reducing the complexity of defining a single class by allowing for multiple definitions of each class. Using the covid-chestxray-dataset \citep{Cohen2020} and images collected from JSRT \citep{Candemir2014}, the authors compared the performance of various popular transfer learning architectures with and without the addition of a class decomposition layer. Overall, the inclusion of class decomposition improved model accuracy, with the deep pre-trained VGG19 model achieving 97.35\%. However, when applied to fully-frozen pre-trained models, the increase in accuracy resulted in a significant drop of model sensitivity. In medical models, maintaining high sensitivity is generally considered more important than accuracy alone, given the critical nature of identifying positive cases. 
+
+\subsection*{Feature Extraction}
+Improving the representations of images is a crucial step in developing a well-performing model. Typically, real-world datasets have poor class distribution and, depending on the method of data collection, may have little diversity. This can lead to overfitted models that appear to perform well; however, they experience a significant drop in performance when tested in a new environment. %This problem of \textit{generalisability} is discussed further in the next section. 
+\cite{Mikolajczyk2018} summarise various methods of data augmentation used for medical images for melanoma recognition. 
+\cite{Barshooi2022} conducted a series of COVID-19 classification experiments to determine the impact of applying image filters to CXRs across various deep neural network architectures. The authors found that Gabor filters achieved the best performance metrics, significantly outperforming the baseline models. In another COVID-19 classification study, \citeauthor{Ismael2021} investigated the efficacy of various feature extraction methods. The authors found that basic machine learning models, such as Support Vector Machines (SVM), could achieve results comparable to deep neural networks trained from scratch on the same data. The findings of both these studies indicate that feature extraction can significantly improve the performance of medical image classifiers, however whether these gains extend to an improvement in model generalisability is unclear. 
+
+\subsection*{Generalisation}
+A significant concern, as highlighted by \cite{Wynants2020} and \cite{Roberts2021} in their systematic reviews of COVID-19 literature, is the real-world performance of published models. Following the PROBAST protocol (Prediction Model Risk of Bias Assessment Tool) \cite{probast}, both papers evaluate literature for the prognosis and diagnosis of COVID-19 using machine learning. \citeauthor{Wynants2020} reviewed literature up to 1 July 2020, whereas \citeauthor{Roberts2021} considered slightly later work from 1 January 2020 to 3 October 2020. Combined, these studies provide insight into the COVID-19 literature from a clinical perspective. 
+
+Both studies report that the majority of COVID-19 models reviewed had a high or unclear risk of bias. \citeauthor{Wynants2020} found that out of the 75 publications critically evaluated, only 1 performed an external validation test. Without external testing, the authors argue there is a high risk of models being overfit and biased. Furthermore, the authors found that publications frequently had unclear data reporting and failed to describe all data pre-processing steps, restricting reproducibility and preventing thorough dataset evaluation. 
+Similar findings were reported by \citeauthor{Roberts2021}, who found that 56 of the 62 studies they critically evaluated had a high or unclear risk of bias. The authors attribute this to the use of datasets of dubious quality, undocumented dataset partitioning resulting in irreproducible experiments and inconsistent demographics across classes, resulting in stratification of classes irrelevant to the pathology. The authors advise that external validation should be used to verify model generalisability and identify potential bias. Without such testing, the authors argue that reported model performance is meaningless.
+
+Together, these systematic reviews demonstrate a disconnect in how medical deep learning models have been developed, and the stringent evaluation requirements necessary for clinical consideration.
+
+\\These concerns are further supported by \cite{Lopez-Cabrera2021}, who also identified a lack of generalisation reporting in COVID-19 model literature. Furthermore, the authors bring attention to CXR studies of other diseases, which provide evidence that suggests \hl{models trained on single sources of data tend to generalise poorly. While the inclusion of more data sources during training can improve model generalisability, it does not guarantee that a model will generalise well.}
+\\This is exemplified by various CXR classification studies that have shown that models which perform well on one dataset may not generalise well onto another. Using a pre-trained DenseNet-121, similar to many COVID-19 classification approaches, \cite{Zech2018} evaluated the performance of a CXR classifier across image datasets collected from three different hospitals. When testing on datasets outwith the training institutions, model performance fluctuated significantly. In one case, a model which achieved 61.7\% accuracy on the internal test set dropped to 18.4\% and 9.9\% accuracy when evaluated on the external test sets. Models trained on multiple hospital datasets achieved the best results overall; however, they also experienced a significant performance drop when comparing internal and external dataset test results. Furthermore, the authors successfully trained a discriminator CNN to identify the origin of images with 99.8\% accuracy. They demonstrated that the principal component feature distribution of bottleneck features were significantly more distinct in the data source discriminator model than in the pneumonia detection model. Thus indicating that origin features were easier for the architecture to learn and that the pneumonia detection model is likely also learning such features.
+\\Similar findings were reported by \cite{Cohen2020a}, who performed a generalisation study across four publicly available CXR datasets. Models trained on all datasets achieved the best results on all test datasets; however, this does not prove they are learning to generalise better. This was exemplified in their hold-one-out tests. Models were trained on all but one of the datasets and then tested on the held-out dataset. Throughout the different dataset combinations, the held-out models consistently performed poorer than their counterparts trained on data that included the target domain. 
+\\Focused on COVID-19 literature, \cite{DeGrave2021} suggested that \textit{shortcut learning}, where models learn irrelevant features and identify spurious correlations concerning the dataset composition unrelated to the pathology, is a significant barrier to model generalisation. Due to the methods of dataset composition, especially in COVID-19 studies, images for each pathology tend to come from a single data source. The authors argue that this creates an environment that facilitates shortcut learning and warns that most COVID-19 publications likely owe their impressive performance to such learned features. They attempt to validate their argument by developing models consistent with COVID-19 publications, then thoroughly evaluating the learned features and their generalisation performance.
+\\In a more recent review of COVID-19 literature, \cite{Aggarwal2022} found only two papers which performed cross-dataset generalisation tests \citep{DeGrave2021, Luz2022}.
+
+\\Collectively, these studies highlight the criticality of performing generalisation testing of medical imagery models, and the scarcity of COVID-19 publications that performed such tests. Beyond external dataset testing, these studies advise performing comparative tests against other baseline models and clear reporting of datasets and pre-processing steps.
+
+In our study, we aim to follow the best practice protocols advised by the aforementioned literature. We perform an ablation test to determine the efficacy of the implemented techniques, and test all variation across external datasets. We compare our results against a typical architecture used in the literature. Full details of the experiment are described in the following section. All code, datsets and models are made publicly available at: 
+ 
+
+\section{Method}\label{method}
+\subsection*{Datasets}
+%This study aimed to determine whether a simplified deep neural network could achieve comparable COVID-19 classification performance to the frequently published deeper pre-trained networks, and . To produce comparable results, we structured our experiment around the \cite{Minaee2020} study. We used the same \textit{covid-xray-5k} dataset% For model training and internal testing we used the proposed \textit{covid-xray-5k} dataset, which comprises 184 COVID-19 CXRs from the \citeauthor{cohen2020covid} dataset, 2400 "No Finding" CXRs and 2600 CXRs of non-COVID-19 diagnosed CXRs from the CheXpert \citep{Irvin2019} dataset. 
+In this study, we used various CXR datasets for internal testing, where the test data belongs to the same source as the training samples, and external testing, where data from new sources are used for model testing.
+\subsubsection*{Internal Dataset}
+We used the \textit{covid-xray-5k} dataset, as proposed by \cite{Minaee2020}, for the training and internal testing of models. This allows us to draw comparisons to this paper and others that used this public dataset. It comprises 184 images of COVID-19 CXRs from \textit{covid-chestxray-dataset} \citep{cohen2020covid}, and 5000 non-COVID-19 CXRs from the \textit{CheXpert} dataset \citep{Irvin2019}. Details of the negative subclasses can be found in Table \ref{tab:data_dist} The COVID-19 images were collected from a diverse range of medical websites and publications worldwide, whereas the \textit{CheXpert} images were obtained exclusively from Stanford Hospital in California, USA, between 2002 and 2017. The CXRs were filtered to only contain Anterior-Posterior (AP) or Posterior-Anterior (PA) images. The dataset is heavily imbalanced towards non-COVID-19 cases, as can be seen in Figure \ref{fig:data_dist}.
+\begin{table}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\setlength{\tabcolsep}{5pt} % Default value: 6pt
+\renewcommand{\arraystretch}{1.5} % Default value: 1
+\begin{tabular}{@{}lllll@{}}
+\toprule
+                                                              & Internal Train Dataset         & Internal Test Dataset           & External Test Dataset I        & External Test Dataset II \\ \midrule
+COVID-19                                                      & 84                             & 100                             & 152                            & 4378                     \\
+Non-COVID-19                                                  & 2000                           & 3000                            & 1668                           & 1676                     \\
+\multicolumn{1}{r}{\textit{Pneumonia}}       & \textit{100}           & \textit{100*}    & \textit{376}  & -                         \\
+\multicolumn{1}{r}{\textit{Other Pathology}}& \textit{1200}          & \textit{1200*}   & \textit{0}  & -                        \\
+\multicolumn{1}{r}{\textit{No Finding}}      & \textit{700}           & \textit{1700}         & \textit{1296}  & -                        \\ \bottomrule
+\end{tabular}
+}
+\caption{Class distribution for internal and external datasets used. Values annotated with * indicate approximations, as given by \citeauthor{Minaee2020}.}
+\label{tab:data_dist}
+\end{table}
+
+\subsubsection*{External Dataset I}
+Since the \textit{covid-xray-5k} dataset was published, more COVID-19 CXRs were added the \citeauthor{cohen2020covid} COVID-19 dataset. To generate external dataset I, we combined the newly available COVID-19 images with \textit{Normal} and \textit{Pneumonia} CXRs from the RSNA Pneumonia Challenge dataset \citep{Shih2019}. We refer to this dataset as \textit{External Test Dataset I}. As was performed on the internal dataset, we filtered the CXRs to contain only AP/PA images and ensured no samples from the internal dataset were present. In total, there were 152 COVID-19 samples and 1668 non-COVID-19 samples. The RSNA dataset consists of images taken from the National Institutes of Health (NIH) \textit{ChestX-ray8} dataset \citep{Wang2017}, which were then manually reviewed and relabelled by radiologists. While the new COVID-19 samples come from the same source as the internal dataset, since it comprises many data sources, we believe it should contain sufficient diversity for performing an external test. 
+% \begin{figure}[H]
+%     \centering
+%     \includegraphics[width=\textwidth]{images/data_dist.png}
+%     \caption{Distribution of COVID-19 and non-COVID-19 samples across used datasets}
+%     % \label{fig:data_dist}
+% \end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/distribution_basic.png}
+    \caption{Distribution of COVID-19 and non-COVID-19 samples across used datasets}
+    \label{fig:data_dist}
+\end{figure}
+\subsubsection*{External Dataset II}
+For completeness, we included a second external dataset for testing; the \textit{SIIM-FISABIO-RSNA COVID-19 Detection} competition dataset \citep{SIIM2021}. This is another manually labelled dataset produced by certified radiologists. It is split into predefined train and test sets; however, only the training labels are publicly available at this time. As such, we test exclusively on the training set. The training data distribution is reported in Table \ref{tab:data_dist}. All CXRs are AP or PA, and have been manually labelled and annotated by radiologists. As the images were provided as DICOMs, we converted them into PNGs with maximum dimensions of 500, while maintaining the original aspect ratio. Whereas the previous datasets specified the types of non-COVID-19 images present, this dataset provides three subcategories of COVID-19 images. Specifically, \textit{Typical}, \textit{Atypical} and \textit{Indeterminate} appearance of COVID-19. 
+The images were obtained from the \textit{RSNA RICORD} COVID-19 dataset \citep{RICORD} and the \textit{BIMCV COVID-19+} dataset \citep{BIMCVCOVID}. RSNA RICORD comprises COVID-19 images from institutions in Turkey, the USA, Canada and Brazil, whereas BIMCV contains COVID-19 and non-COVID-19 images from 11 hospitals throughout the Valencian Region in Spain. 
+
+% In training and testing, images were resized to a resolution of 224 x 224. Given that model generalisability is a primary focus of this study, we applied standard data augmentations in all of our experiments to help prevent model overfitting. These included random rotations of up to 15$^{\circ}$, zoom range of 0.2, horizontal flipping and width and height shifts up to 0.1.  % The specific augmentations are detailed in Table \ref{tab:data_augs} and were applied randomly to all training images.
+
+
+% \begin{table}[H]
+% \centering
+% \begin{tabular}{@{}ll@{}}
+% \toprule
+% Augmentation    & Value \\ \midrule
+% Rotation        & 15    \\
+% Zoom            & 0.2   \\
+% Horizontal Flip & True  \\
+% Width Shift     & 0.1   \\
+% Height Shift    & 0.1   \\ \bottomrule
+% \end{tabular}
+% \caption{Summary of standard augmentation applied }
+% \label{tab:data_augs}
+% \end{table}
+
+\subsection*{Model Architecture}
+This study aimed to determine the efficacy of various image pre-processing techniques on medical image classification and whether they can improve the generalisability of trained models. Considering the limited availability of positive CXRs, most recent COVID-19 studies have focused on achieving high performance in internal tests using deep neural networks. Typically, these networks are pre-trained on vast, real-world datasets. This technique is known as \textit{transfer learning}, and a significant body of literature suggests this approach can help train models on very few samples while also improving generalisability in new datasets. In our experiments, we focused on improving the performance of a smaller network on both internal and external test datasets. We compare our results to a typical transfer learned network to establish whether the model can achieve comparable or better performance than the pre-trained methods.
+
+\subsubsection*{4-Convolutional Layer Neural Network}
+We propose a simple deep neural network architecture, similar to LeNet-5 \citep{Lecun1998} and AlexNet \citep{KrizhevskyAlex2012}. While larger and denser networks generally outperform these architectures in mainstream image classification challenges, such tasks tend to benefit from access to vast image datasets. This allows for significantly more relevant and diverse features to be learned. Furthermore, the most influential benchmark tasks typically constitute real-world imagery. Pre-training large networks on images from a similar domain is commonly reported to improve model performance, speed up convergence and facilitate effective learning from small amounts of data. However, the relevance of features learned from natural photography for radiographic medical imagery is unclear due to the significant domain shift. Therefore, it is unlikely such deep and dense networks can be trained effectively on the very small datasets available for COVID-19 classification. \hl{We hypothesise that such models may be prone to learning more irrelevant features to fill the feature space and more likely to assign value to spurious correlations in the data. Instead, by focusing on improving the image representations through pre-processing techniques, a smaller network may manage to primarily learn important features and achieve better results.}
+
+Our architecture contains four convolution layers with a kernel size of (3, 3), each followed by a max-pooling layer. These are flattened and followed by two fully connected layers, the final layer outputting the probability the image is COVID-19 positive. 
+% A summary of the model architecture is shown in Table \ref{tab:model_summary}. 
+We used LeakyReLU with an alpha value of 0.2 for layer activations and trained models for a maximum of 50 epochs with a batch size of 32. In total, the architecture contains 37,990,593 trainable parameters. 
+
+% \begin{table}[H]
+% \centering
+% % \resizebox{0.8\textwidth}{!}{%
+% % \setlength{\tabcolsep}{36pt} % Default value: 6pt
+% % \renewcommand{\arraystretch}{1.1} % Default value: 1
+% % \begin{tabular}{@{}llll@{}}
+% \setlength{\tabcolsep}{26pt} % Default value: 6pt
+% \renewcommand{\arraystretch}{1.1} % Default value: 1
+% \begin{tabularx}{0.9\linewidth}{ @{}llll@{} }
+% \toprule
+% Operation   & Units/Filters & Kernel/Pool & Activation \\ \midrule
+% Convolution & 32            & (3,3)       &            \\
+% Max Pooling &               & (2,2)       &            \\
+% Convolution & 64            & (3,3)       & Leaky ReLU \\
+% Max Pooling &               & (2,2)       &            \\
+% Convolution & 128           & (3,3)       & Leaky ReLU \\
+% Max Pooling &               & (2,2)       &            \\
+% Convolution & 128           & (3,3)       & Leaky ReLU \\
+% Flatten     &               &             &            \\
+% Dense       & 512           &             & Leaky ReLU \\
+% Dense       & 1             &             &            \\ \bottomrule
+% \end{tabularx}
+% % \end{tabular}
+% % }
+% \caption{4 Convolution CNN model architecture}
+% \label{tab:cnn_architecture}
+% \end{table}
+
+\subsubsection*{Transfer Learning with DenseNet-121}
+Transfer learning has become one of the most popular techniques to train deep neural networks effectively on relatively few COVID-19 samples. The networks are first initialised with the weights from a model trained on another dataset. Typically vast image datasets are used, however other datasets can be used which are more closely related to the target training task. In our study, we experiment with two pre-trained weights; the frequently used ImageNet \citep{Deng2009} weights and weights from another COVID-19 classifier produced by \citeauthor{Wehbe2021}. The Wehbe COVID-19 weights were trained on a private COVID-19 dataset that contained 14788 training samples collected from multiple institutions. Since these weights are transferred from a model which has been exposed to more COVID-19 imagery, the model pre-trained on these may have an unfair advantage. This should be considered when comparing results.
+
+Generally, pre-trained networks are used either as feature extractors, where all model layers are frozen and the features the model extracted from the transferred weights are fed into a final layer trained to predict the correct label, or as an initialisation model, where layers are unfrozen and updated during training. In this study, we trained both fully frozen and fully unfrozen transfer learned networks, however only the fully unfrozen results are reported as these consistently performed better across all test sets.
+
+There are many deep neural network architectures which are frequently used for transfer learning, however in this study we only focus DenseNet \citep{Huang2017}. This architecture constitutes \textit{Dense Blocks} of repeated convolutional layers and \textit{Transition Layers} which contain a convolutional layer and an average pooling layer. Layers are connected to all the previous layers. 
+A much larger network than our 4-convolutional layer model, the DenseNet-121 contains 121 convolution layers and has 7,038,529 total parameters,  6,954,881 of which are trainable. 
+% Many classification architectures utilise pre-trained networks as a backbone for their model, as it is assumed that it will improve a models ability to extract meaningful features and produce a more generalised model. However, whether pre-training on natural imagery improves the processing of medical imagery is unclear.
+
+\subsubsection*{Model Hyperparameters}
+In both architectures, an early stopping policy was implemented. The policy ended model training if there was no improvement in test loss for 30 epochs. The policy also restored the best performing weights from all epochs. We used Stochastic Gradient Descent (SGD) and cross-entropy loss for model optimisation. 
+
+When applying transfer learning, images are typically resized to match the dimensions used in the pre-training dataset. Our DenseNet models required images to be resized to a resolution of 224 x 224. To maintain consistency across models, all architectures used images resized to the same resolution. When pre-processing techniques were applied to images, they were processed at their original resolution or were downsampled to 1000 x 1000 if the original resolution exceeded this. After processing, the images were then resized down to 224 x 224.
+
+\subsection*{Experiment}
+
+In this study, we experiment with various pre-processing and class balancing techniques to identify which methods produce the strongest model. We also investigate whether they can impact their ability to generalise on previously unseen data sources. To determine the efficacy of each technique and identify the most generalising approach, we perform an ablation study using the simple 4-convolutional layer architecture. We then compare the performance of the best 4-conv. model against the two pre-trained DenseNets. To ascertain whether the optimal configuration identified in the ablation study also improves the generalisability of other architectures, we apply the same combination of techniques to the pre-trained DenseNets.
+
+Due to the significant class imbalances in all our training and testing datasets, we compared the performance of two frequently used class balancing techniques; oversampling and class weighting. 
+Oversampling aims to generate more training samples of a minority class by duplicating the existing samples. Simply oversampling may lead to overfitting of the minority class, as the model is likely to assign more importance to a limited set of repeated features. The absence of such features in new data distributions may cause the model to generalise poorly. To avoid this, data augmentations are frequently applied to the oversampled datasets to introduce variation in the repeated images. All classes in the dataset should be treated with augmentations to prevent \textit{short-cut learning}, otherwise the model may learn to identify \textit{augmented} images rather than specific classes.
+In our training data, there was an extreme class imbalance, as shown in Figure \ref{fig:data_dist}. The COVID-19 class contained significantly fewer samples than the non-COVID-19 class. When training oversampled models, we increased the COVID-19 samples from 78 to 1950 to achieve an even distribution. 
+
+Class weighting, in comparison, does not modify the data. Instead, weights for  are assigned to the loss function to encourage it to assign greater importance to the minority class samples when training. We calculated the weights as follows:
+\[W_{class} = \frac{1}{n_{class}}  0.5 (n_{data})\]
+where \begin{math}n_{class}\end{math} is the total number of samples of the class in the dataset and \begin{math}n_{data}\end{math} is the total number of images in the dataset and the specified class weight is denoted as \begin{math}W_{class}\end{math}.  
+
+
+In our class weighting experiments, we assigned the negative class a weight of 0.5195 and the COVID-19 class 13.3205. 
+
+\begin{table}[H]
+\setlength{\tabcolsep}{16pt} % Default value: 6pt
+\renewcommand{\arraystretch}{1.1} % Default value: 1
+\begin{tabularx}\linewidth{ @{}ll@{} }
+\toprule
+Parameters                                       & Value                                                                                                              \\ \midrule
+Number of filters                                & $8$                                                                                                                  \\
+Filter size                                      & $35$                                                                                                                 \\
+Sigma (\sigma) & $3$                                                                                                                  \\
+Wavelengths (\lambda)                            & $4\pi, 4\sqrt{2\pi}, 8\pi, 8\sqrt{2\pi}, 16\pi, 16\sqrt{2\pi}, 32\pi, 32\sqrt{2\pi}$                             \\
+Spatial aspect ratio (\gamma)                    & $ \sqrt{2} $                                                                                                     \\
+Phase offset (\psi)                              & $0.1$                                                                                                                \\
+Orientations (\theta)                             & $\frac{\pi}{8}, \frac{\pi}{4}, \frac{3\pi}{8}, \frac{\pi}{2}, \frac{5\pi}{8}, \frac{3\pi}{4}, \frac{7\pi}{8}$ \\ \bottomrule
+\end{tabularx}
+\caption{Gabor filter parameters}
+\label{tab:gabor_params}
+\end{table}
+
+Beyond data distribution modification, the literature suggests that image enhancement techniques can boost model performance; however, it is unclear if that extends to generalised model performance. To determine their impact in cross-dataset testing, we experimented with two frequently used image pre-processing methods: histogram equalisation and Gabor filtering. The first aims to redistribute the grey levels throughout the image more evenly and improve image contrast. This may reduce noise in images. The latter is a filter which can detect textural features and edges in images. This process may highlight significant features in the image which could otherwise be lost. Visualisations of both methods applied to a CXR are shown in Figure \ref{fig:processedCXR}. In our study, we replicate the Gabor filter parameters used in the \citeauthor{Barshooi2022} experiment, as these achieved promising results in their study. We have specified the exact values used for the Gabor filters in Table \ref{tab:gabor_params}.
+
+
+\begin{figure}[H]
+     \centering
+     \begin{subfigure}[t]{0.24\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{images/cxr/base_cxr.png}
+         \caption{Original CXR}
+         \label{fig:baseCXR}
+     \end{subfigure}
+     \hfill
+     \begin{subfigure}[t]{0.24\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{images/cxr/hist_cxr.png}
+         \caption{Histogram equalised CXR}
+         \label{fig:heqCXR}
+     \end{subfigure}
+     \hfill
+     \begin{subfigure}[t]{0.24\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{images/cxr/gabor_cxr.png}
+         \caption{Gabor filtered CXR}
+         \label{fig:gabCXR}
+     \end{subfigure}
+     \hfill
+     \begin{subfigure}[t]{0.24\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{images/cxr/gabor_hist_cxr.png}
+         \caption{Gabor \& histogram equalised CXR}
+         \label{fig:gabheqCXR}
+     \end{subfigure}
+        \caption{Examples of the various image enhancement techniques used for this study.}
+        \label{fig:processedCXR}
+\end{figure}
+%Given that model generalisability is a primary focus of this study, we applied typical data augmentations in all of our experiments to help prevent model overfitting. These included random rotations of up to 15$^{\circ}$, zoom range of 0.2, horizontal flipping and width and height shifts up to 0.1. 
+
+
+\subsection{Evaluation}
+%We have framed our problem as a binary classification challenge. 
+We report area under the ROC curve (AUC), sensitivity, specificity and precision for each model. AUC is calculated by taking the integral of the \textit{false positive rate} and \textit{true positive rate} at regular intervals using using the trapezoidal rule. The other metrics are calculated as follows:
+\[Sensitivity = \frac{TP}{TP+FN}\]
+\[Specificity = \frac{TN}{FP+TN}\]
+\[Precision = \frac{TP}{TP+FP}\]
+
+Sensitivity represents how many of the COVID-19 positive cases were correctly identified as positive, while specificity indicates how many non-COVID-19 cases were identified correctly as negative. Precision quantifies how accurate the positive predictions are. All of these metrics are calculated when a classification threshold is set. 
+%In our study, we purposefully tune all models to 98\% sensitivity, as a high false negative rate is unacceptable in a medical model.
+AUC, and the accompanying ROC plots, allow us to report a summary of the model's performance at different classification thresholds and compare models easier.
+These metrics are the most frequently reported in medical image classification literature.
+
+\subsubsection*{Model Threshold Tuning}
+Both the transfer learned network and the 4-convolutional layer network output the probability of each image being positive for COVID-19. To convert the probabilities into label predictions, we first normalised them to a scale of 0 - 1. We then set a threshold where any predicted probabilities higher than this threshold were considered to be \textit{COVID-19 positive} and all other predictions as \textit{Negative for COVID-19}. Given the medical focus of this task, detecting all cases of COVID-19 is considered more important than achieving fewer false positives. As such, the threshold was tuned to achieve a sensitivity of 0.98 rather than the optimal threshold that achieves the least amount of incorrect predictions. Specificity and precision metrics are reported when the model is tuned to this sensitivity. AUC is unaffected as it evaluates the model performance across a range of thresholds, thus providing a more general indication of model performance.
+% \begin{table}[H]
+% \centering
+% \resizebox{0.8\textwidth}{!}{%
+% \setlength{\tabcolsep}{18pt} % Default value: 6pt
+% \renewcommand{\arraystretch}{1.3} % Default value: 1
+% \begin{tabular}{@{}llllll@{}}
+% \toprule
+% Batch & Epochs & Learning Rate & Momentum & Optimiser & Loss          \\ \midrule
+% 32    & 50     & 0.001         & 0.9      & SGD       & Cross-Entropy \\ \bottomrule
+% \end{tabular}
+% }
+% \caption{Hyperparameters for Convolutional Neural Network models}
+% \label{tab:model_config}
+% \end{table}
+
+
+
+\section{Results}\label{results}
+To compare our experimental results against the \cite{Minaee2020} paper, we report the performance of the best models from all our experiment runs in Table \ref{tab:model_summary}. The table summarises the internal and external test performance of the models. We  were unable to reproduce the SqueezeNet model reported by \citeauthor{Minaee2020}, and therefore could not report the external test ability of the model. Instead, we trained 
+\begin{table}[H]
+\resizebox{\textwidth}{!}{%
+\setlength{\tabcolsep}{6pt} % Default value: 6pt
+\renewcommand{\arraystretch}{1.5} % Default value: 1
+\begin{tabular}{@{}lllllllllllllllll@{}}
+\toprule
+                                                                                         & \multicolumn{4}{l}{Internal Test}                       &  &  & \multicolumn{4}{l}{External Test I}                     &  &  & \multicolumn{4}{l}{External Test II}                    \\
+Model Architecture                                                                       & AUC            & Sens & Spec           & Prec           &  &  & AUC            & Sens & Spec           & Prec           &  &  & AUC            & Sens & Spec           & Prec           \\ \midrule
+% SqueezeNet \citep{Minaee2020}                                           & 0.992          & 0.98 & 0.929          & 0.293          &  &  & -              & -    & -              & -              &  &  & -              & -    & -              & -              \\
+% ImageNet DenseNet121                                           & 0.986          & 0.98 & 0.842          & 0.185          &  &  & 0.52              & 0.98    & 0.004              & 0.082              &  &  & 0.543              & 0.98    & 0.034              & \textbf{{\ul0.726}}              \\
+%COVID-19 DenseNet121                                           & 0.978          & 0.98 & 0.815          & 0.15          &  &  & 0.503              & 0.98   & 0.002              & 0.082              &  &  & 0.66              & 0.98    & 0.069              & 0.732              \\
+                                                                                        %  &                &      &                &                &  &  &                &      &                &                &  &  &                &      &                &                \\
+4 Conv. CNN                                                                                 & 0.993          & 0.98 & 0.912          & 0.272          &  &  & 0.699          & 0.98 & 0.096          & 0.090          &  &  & 0.532          & 0.98 & 0.019          & 0.723          \\
+Oversampled                                                                              & 0.993          & 0.98 & 0.891          & 0.232          &  &  & 0.671          & 0.98 & 0.096          & 0.090          &  &  & 0.519          & 0.98 & 0.140          & 0.723          \\
+Class Weighted                                                                           & \textbf{{\ul0.995}} & 0.98 & \textbf{{\ul0.950}} & 0.396          &  &  & 0.682          & 0.98 & 0.137          & 0.095          &  &  & 0.547          & 0.98 & 0.023          & 0.724          \\
+% Oversampled \& Class Weighted                                                            & 0.992          & 0.98 & 0.877          & 0.211          &  &  & 0.61           & 0.98 & 0.096          & 0.090          &  &  & 0.525          & 0.98 & 0.017          & 0.722          \\
+                                                                                         &                &      &                &                &  &  &                &      &                &                &  &  &                &      &                &                \\
+Histogram Eq.                                                                            & 0.862          & 0.98 & 0.209          & 0.040          &  &  & 0.824          & 0.98 & 0.087          & 0.089          &  &  & 0.518          & 0.98 & 0.026          & 0.725          \\
+Gabor Filter                                                                             & 0.993          & 0.98 & 0.946          & \textbf{{\ul0.422}} &  &  & 0.71           & 0.98 & 0.131          & 0.094          &  &  & \textbf{{\ul0.552}} & 0.98 & 0.024          & 0.724          \\
+Histogram Eq. \& Gabor Filter                                                            & 0.973          & 0.98 & 0.762          & 0.158          &  &  & 0.973          & 0.98 & 0.430          & 0.136          &  &  & 0.526          & 0.98 & 0.021          & 0.723          \\
+                                                                                         &                &      &                &                &  &  &                &      &                &                &  &  &                &      &                &                \\
+Class Weighted \& Gabor Filter                                                           & 0.992          & 0.98 & 0.811          & 0.159          &  &  & 0.717          & 0.98 & 0.137          & 0.093          &  &  & 0.512          & 0.98 & 0.029          & 0.725          \\
+\begin{tabular}[c]{@{}l@{}}Class Weighted, Histogram Eq. \\ \& Gabor Filter (WeGabE)\end{tabular} & 0.978          & 0.98 & 0.843          & 0.177          &  &  & \textbf{{\ul0.976}} & 0.98 & \textbf{{\ul0.732}} & \textbf{{\ul0.252}} &  &  & 0.550          & 0.98 & \textbf{{\ul0.035}} & \textbf{{\ul0.726}} \\ \bottomrule
+\end{tabular}
+}
+\caption{Summary of average model performance on internal and external datasets when tuned to a sensitivity of 98\%.}
+\label{tab:model_summary}
+\end{table}
+
+
+
+
+
+\begin{figure}[H]
+     \centering
+     \begin{subfigure}[b]{0.3\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{images/cw_gab_hist_int_mod2.png}
+         \caption{Internal test dataset}
+         \label{fig:ex2_dist_probs}
+     \end{subfigure}
+     \hfill
+     \begin{subfigure}[b]{0.3\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{images/cw_gab_hist_ex1_mod2.png}
+         \caption{External dataset I}
+         \label{fig:ex2_dist_probs}
+     \end{subfigure}
+     \hfill
+     \begin{subfigure}[b]{0.3\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{images/cw_gab_hist_ex2_mod2.png}
+         \caption{External dataset II}
+         \label{fig:ex2_dist_probs}
+     \end{subfigure}
+        \caption{Distribution of prediction probabilities by best performing WeGabE model}
+        \label{fig:dist_probs}
+\end{figure}
+
+
+
+
+
+\begin{table}[H]
+\resizebox{\textwidth}{!}{%
+\setlength{\tabcolsep}{6pt} % Default value: 6pt
+\renewcommand{\arraystretch}{1.5} % Default value: 1
+\begin{tabular}{@{}lllllllllllll@{}}
+\toprule
+\multicolumn{3}{l}{Internal Test}          &  &  & \multicolumn{3}{l}{External Test I}        &  &  & \multicolumn{3}{l}{External Test II}       \\
+Threshold & Sensitivity & Specificity &  &  & Threshold & Sensitivity & Specificity &  &  & Threshold & Sensitivity & Specificity \\ \midrule
+0.323     & 0.990       & 0.654       &  &  & 0.210     & 0.993       & 0.269       &  &  & 0.089     & 0.990       & 0.020       \\
+0.383     & 0.980       & 0.885       &  &  & 0.279     & 0.980       & 0.730       &  &  & 0.108     & 0.980       & 0.039       \\
+0.402     & 0.970       & 0.927       &  &  & 0.287     & 0.974       & 0.770       &  &  & 0.122     & 0.970       & 0.054       \\
+0.412     & 0.960       & 0.944       &  &  & 0.297     & 0.961       & 0.814       &  &  & 0.131     & 0.961       & 0.064       \\
+0.430     & 0.950       & 0.956       &  &  & 0.333     & 0.954       & 0.936       &  &  & 0.139     & 0.950       & 0.079       \\ \bottomrule
+\end{tabular}
+}
+\caption{Cross-dataset sensitivity and specificity values of the best performing WeGabE model at different thresholds. }
+\label{tab:wegabe_thresh}
+\end{table}
+
+\begin{table}[H]
+\resizebox{\textwidth}{!}{%
+\setlength{\tabcolsep}{6pt} % Default value: 6pt
+\renewcommand{\arraystretch}{1.5} % Default value: 1
+\begin{tabular}{@{}lllllllllllll@{}}
+\toprule
+\multicolumn{3}{l}{Internal Test}          &  &  & \multicolumn{3}{l}{External Test I}        &  &  & \multicolumn{3}{l}{External Test II}       \\
+Threshold & Sensitivity & Specificity &  &  & Threshold & Sensitivity & Specificity &  &  & Threshold & Sensitivity & Specificity \\ \midrule
+0.347     & 0.990       & 0.632       &  &  & 0.129     & 0.993       & 0.003       &  &  & 0.256     & 0.990       & 0.020       \\
+0.419     & 0.980       & 0.863       &  &  & 0.148     & 0.980       & 0.004       &  &  & 0.290     & 0.980       & 0.033       \\
+0.421     & 0.970       & 0.869       &  &  & 0.149     & 0.974       & 0.004       &  &  & 0.310     & 0.970       & 0.050       \\
+0.468     & 0.960       & 0.946       &  &  & 0.179     & 0.961       & 0.007       &  &  & 0.327     & 0.961       & 0.063       \\
+0.470     & 0.950       & 0.947       &  &  & 0.208     & 0.954       & 0.011       &  &  & 0.342     & 0.950       & 0.072       \\ \hline
+\end{tabular}
+}
+\caption{Cross-dataset sensitivity and specificity values of the best performing ImageNet DenseNet-121 model at different thresholds. }
+\label{tab:imagenet_thresh}
+\end{table}
+
+\subsection{Augmentation}
+When learning from limited amounts of data, it has become common practice to apply data augmentations to increase the amount of training samples to learn from and introduce variety to improve model robustness. Many COVID-19 classifiers implement data augmentation as it has proven to work well on natural imagery \cite{Mikolajczyk2018}. We compare the performance of two model configurations, with and without data augmentations applied. We chose \textit{oversampling}, as this is the most likely configuration to experience significant improvement, and \textit{WeGabE} since it performed best overall. The averaged results are reported in Table \ref{tab:aug_comparison}. 
+In the oversampled models, data augmentation significantly improved all metrics on the internal test dataset and slight improved the AUC by 0.031 and the specificity by 0.003 on external dataset II. However, on external dataset I, the unaugmented model achieves much higher metrics, with an AUC increase of 0.131, a specificity increase from 0.004 to 0.096 and precision with 0.008 difference. 
+Similarly, the WeGabE model saw metrics improve on external dataset II when augmentations were applied. The most gain was by 0.029 for AUC, with the specificity and precision only improving by 0.003 and 0.001 respectively. As found with the oversampled model, the unaugmented model outperformed the augmented model on the external dataset. However, it also achieved higher AUC and specificity on the internal test dataset.
+
+\begin{table}[H]
+\resizebox{\textwidth}{!}{%
+\setlength{\tabcolsep}{6pt} % Default value: 6pt
+\renewcommand{\arraystretch}{1.5} % Default value: 1
+\begin{tabular}{@{}lllllllllllllllll@{}}
+\toprule
+                         & \multicolumn{4}{l}{Internal Test}                                          &  &  & \multicolumn{4}{l}{External Test I}                                        &  &  & \multicolumn{4}{l}{External Test II}                                       \\
+Model Architecture       & AUC                  & Sens  & Spec                 & Prec                 &  &  & AUC                  & Sens  & Spec                 & Prec                 &  &  & AUC                  & Sens  & Spec                 & Prec                 \\ \midrule
+Oversampled              & 0.993                & 0.980 & 0.891                & 0.232                &  &  & {\ul \textbf{0.671}} & 0.980 & {\ul \textbf{0.096}} & {\ul \textbf{0.090}}  &  &  & 0.519                & 0.980 & 0.020                 & 0.722                \\
+Augmented \& Oversampled & {\ul \textbf{0.995}} & 0.980 & {\ul \textbf{0.997}} & {\ul \textbf{0.929}} &  &  & 0.54                 & 0.980 & 0.004                & 0.082                &  &  & {\ul \textbf{0.55}}  & 0.980 & {\ul \textbf{0.023}}                & 0.722                \\
+                         &                      &       &                      &                      &  &  &                      &       &                      &                      &  &  &                      &       &                      &                      \\
+WeGabE                   & {\ul \textbf{0.978}} & 0.980 & {\ul \textbf{0.843}} & 0.179                &  &  & {\ul \textbf{0.976}} & 0.980 & {\ul \textbf{0.732}} & {\ul \textbf{0.252}} &  &  & 0.55                 & 0.980 & 0.035                & 0.726                \\
+Augmented \& WeGabE      & 0.976                & 0.980 & 0.835                & {\ul \textbf{0.192}} &  &  & 0.971                & 0.980 & 0.666                & 0.212                &  &  & {\ul \textbf{0.579}} & 0.980 & {\ul \textbf{0.038}} & {\ul \textbf{0.727}} \\ \bottomrule
+\end{tabular}
+}
+\caption{Comparison of models with and without data augmentation applied}
+\label{tab:aug_comparison}
+\end{table}
+
+Overall, neither model saw a definitive increase in generalised performance with or without data augmentation. While the augmented oversampled model saw an impressive improvement in precision and a substantial specificity increase on the internal test set, this did not translate into better generalisation on the two external sets. 
+
+
+
+\subsection{Transfer Learning}
+Many classification architectures utilise pre-trained networks as a backbone for their model, as it is assumed that it will improve a models ability to extract meaningful features and produce a more generalised model. However, whether pre-training on natural imagery improves the processing of medical imagery is unclear. We compared the performance of our simple 4-convolutional layer WeGabE model against three transfer learned DenseNet models. The first DenseNet-121 was pre-trained on ImageNet, as performed by most COVID-19 transfer learned architectures. The second used the same architecture combined with the WeGabE techniques. The third DenseNet-121 used the weights of another COVID-19 classifier which was trained on a private dataset by \cite{Wehbe2021}. While using COVID-19 pre-training gives an unfair advantage, as it equivalents to providing more new training data for the model, it can still provide an indication as to how significant the impact of transfer learning can be for medical image classification and generalisation. All transfer learned models were first trained with the transferred layers frozen, then unfroze and fine-tuned for 10 epochs. We compared the performance of fine-tuning against the fully frozen models and found that the fine-tuned models achieved better performance, except when WeGabE was used with the ImageNet DenseNet-121. The best results are reported in Table \ref{tab:compare_architecture}. 
+
+\begin{table}[H]
+\resizebox{\textwidth}{!}{%
+\setlength{\tabcolsep}{6pt} % Default value: 6pt
+\renewcommand{\arraystretch}{1.5} % Default value: 1
+\begin{tabular}{@{}lllllllllllllllll@{}}
+\toprule
+                              & \multicolumn{4}{l}{Internal Test}                                          &  &  & \multicolumn{4}{l}{External Test I}                                        &  &  & \multicolumn{4}{l}{External Test II}                                      \\
+Model Architecture            & AUC                  & Sens  & Spec                 & Prec                 &  &  & AUC                  & Sens  & Spec                 & Prec                 &  &  & AUC                 & Sens  & Spec                 & Prec                 \\ \midrule
+WeGabE 4-Conv. Layer                        & 0.978                & 0.980 & {\ul \textbf{0.843}} & {\ul \textbf{0.177}} &  &  & 0.976 & 0.980 & 0.732 & 0.252 &  &  & 0.550               & 0.980 & 0.035                & 0.726                \\
+ImageNet DenseNet-121         & {\ul \textbf{0.986}} & 0.980 & 0.776                & 0.13                 &  &  & 0.520                & 0.980 & 0.004                & 0.082                &  &  & 0.543               & 0.980 & 0.034                & 0.726                \\
+WeGabE ImageNet DenseNet-121         & 0.979 & 0.980 & 0.690                & 0.096                 &  &  & {\ul \textbf{0.987}}                & 0.980 & {\ul \textbf{0.736}}                & {\ul \textbf{0.254}}                &  &  & 0.512               & 0.980 & 0.027                & 0.725                \\
+Wehbe DenseNet-121            & 0.978                & 0.980 & 0.815                & 0.15                 &  &  & 0.502                & 0.980 & 0.002                & 0.082                &  &  & {\ul \textbf{0.66}} & 0.980 & {\ul \textbf{0.069}} & {\ul \textbf{0.732}} \\
+%SqueezeNet \citep{Minaee2020} & 0.992          & 0.980 & 0.929          & 0.293                    &  &  & -                    & -     & -                    & -                    &  &  & -                   & -     & -                    & -                    \\ 
+\bottomrule
+\end{tabular}
+}
+\caption{Comparison of architecture average scores.}
+\label{tab:compare_architecture}
+\end{table}
+
+On the internal test, all models achieve high performance. Due to the severe class imbalance, precision values are low. The DenseNets pre-trained on ImageNet attain significantly lower specificity values. 
+
+In contrast, external test I revealed both WeGabE processed models maintained a strong average AUC, whereas the basic pre-trained DenseNets lost half of their predictive performance, with scores equivalent to random guessing. This is clearly visible in Figure \ref{fig:ex1_dist_probs}. This suggests that the WeGabE approach can improve the generalisation performance of various architectures, and that data representation may be more important than architecture.
+
+On external test II, all models suffered severe performance degradation. The Wehbe pre-trained models 
+
+
+\begin{figure}[H]
+     \centering
+     \begin{subfigure}[b]{0.31\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{images/rocs/InternalROCPlot.png}
+         \caption{Internal test dataset}
+         \label{fig:int_dist_probs}
+     \end{subfigure}
+     \hfill
+     \begin{subfigure}[b]{0.31\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{images/rocs/External1ROCPlot.png}
+         \caption{External dataset I}
+         \label{fig:ex1_dist_probs}
+     \end{subfigure}
+     \hfill
+     \begin{subfigure}[b]{0.31\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{images/rocs/External2ROCPlot.png}
+         \caption{External dataset II}
+         \label{fig:ex2_dist_probs}
+     \end{subfigure}
+        \caption{Average AUC and ROC plots for transfer learned networks and the 4-convolutional layer model. }
+        \label{fig:arch_roc_plots}
+\end{figure}
+
+Both DenseNet-121 models performed significantly poorer than the WeGabE model on external dataset I, however the Wehbe pre-trained model achieved the highest scores on external dataset II. 
+
+
+
+
+\section{Discussion}\label{discussion}
+Recent publications of COVID-19 CXR classification studies have reported impressive internal test results, however few have evaluated how the models generalise in new settings. Critical evaluations of such studies have highlighted concerns in regard to dataset quality, such as hidden stratification of classes due to dataset composition and too few COVID-19 training samples to produce a generalised definition. To improve dataset distribution, many papers used transfer learning with popular deep neural network architectures. However, studies on pnuemonia CXR classification suggest pre-training on image datasets, such as ImageNet, does not improve the generalisation performance of medical CXR models \citep{Zech2018, Cohen2020}. 
+% Furthermore, in a recent COVID-19 study, \citeauthor{DeGrave2021} evaluated the cross-dataset performance of various popular COVID-19 detection architectures and found that 
+
+In this study, we aimed to determine whether a simple network architecture can achieve comparable performance to the popular transfer learning networks in internal test datasets and generalise stronger on external test sets. This study has shown that transfer learning from an unrelated domain provides insignificant performance improvement in medical imagery. Furthermore, pre-training on a closely related task does not guarantee generalisation improvements either. The evidence from this study suggests that using image pre-processing techniques to improve the image representations is a more promising approach to better 
+
+
+\bibliography{manual_refs}
+\end{document}
